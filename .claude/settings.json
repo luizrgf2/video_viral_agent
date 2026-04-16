@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/home/luiz/.local/bin/uv run *)"
+    ]
+  }
+}
