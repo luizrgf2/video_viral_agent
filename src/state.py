@@ -7,6 +7,7 @@ class AnalysisStatus(str, Enum):
     PENDING = "pending"
     ANALYZING_VIDEO = "analyzing_video"
     IDENTIFYING_MOMENTS = "identifying_moments"
+    EDITING_VIDEO = "editing_video"
     COMPLETED = "completed"
     FAILED = "failed"
 
@@ -23,6 +24,7 @@ class VideoAnalysisState(BaseModel):
     analysis: List[str] = Field(..., min_length=1, description="Analysis criteria")
     videoDescription: Optional[str] = Field(None, description="VLM-generated video description with timestamps")
     clips: Optional[List[ClipInfo]] = Field(None, description="Identified viral moments")
+    outputClips: Optional[List[str]] = Field(None, description="Paths to generated clip files")
     error: Optional[str] = Field(None, description="Error message if failed")
     status: AnalysisStatus = Field(default=AnalysisStatus.PENDING, description="Current workflow status")
 

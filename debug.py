@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 async def debug_main():
-    video_path = "/home/luiz/Downloads/videoplayback.1776280508826.publer.com.mp4"
-    analysis = ["identify funny moments", "identify impactful moments"]
+    video_path = "/home/luiz/Downloads/video_to_test.mp4"
+    analysis = ["Foque somente nas partes onde ele cita o ceo da amazon e a amazon"]
 
     load_dotenv()
 
@@ -36,16 +36,23 @@ async def debug_main():
         result = await run_workflow(initial_state)
 
         if result["status"] == AnalysisStatus.COMPLETED and result["clips"]:
-            print(f"\n✅ Found {len(result.clips)} viral moments:\n")
+            print(f"\n✅ Found {len(result["clips"])} viral moments:\n")
 
-            for i, clip in enumerate(result.clips, 1):
+            for i, clip in enumerate(result["clips"], 1):
                 print(f"{i}. {clip.startTime} - {clip.endTime}")
                 print(f"   Reason: {clip.reason}")
                 print(f"   Matched: {clip.matchedCriterion}")
                 print()
 
-        elif result.status == AnalysisStatus.FAILED:
-            print(f"\n❌ Analysis failed: {result.error}\n")
+            # Show generated clips
+            if result.get("outputClips"):
+                print(f"\n🎬 Generated {len(result["outputClips"])} video clips:\n")
+                for clip_path in result["outputClips"]:
+                    print(f"   📹 {clip_path}")
+                print()
+
+        elif result["status"] == AnalysisStatus.FAILED:
+            print(f"\n❌ Analysis failed: {result["error"]}\n")
 
         else:
             print("\n⚠️  No viral moments found\n")

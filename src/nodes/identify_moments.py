@@ -35,19 +35,25 @@ async def identify_moments_node(state: VideoAnalysisState) -> dict:
 {state.videoDescription}
 
 # Instructions
-Based on the video description and analysis criteria, identify the most viral/impactful moments that should be extracted as short clips.
+Based on the video description and analysis criteria, identify the most viral/impactful moments that should be extracted as clips.
+
+IMPORTANT: Focus on NATURAL CONTENT BOUNDARIES, not arbitrary time limits. A moment should be:
+- As long as needed to be complete and coherent (could be 15 seconds or 3 minutes)
+- Long enough to provide context and deliver the value/punchline
+- Short enough to remain engaging (avoid dragging or unnecessary footage)
 
 For each moment, provide:
-1. Start time (MM:SS or HH:MM:SS format)
-2. End time (MM:SS or HH:MM:SS format)
+1. Start time (MM:SS or HH:MM:SS format) - when the moment naturally begins
+2. End time (MM:SS or HH:MM:SS format) - when the moment naturally concludes
 3. Reason: Why this moment is viral/important
 4. Matched criterion: Which analysis criterion this moment matches
 
 Focus on moments that:
 - Have high emotional impact
 - Contain valuable insights or memorable quotes
-- Would perform well on social media (short, engaging, shareable)
+- Would perform well on social media (engaging, shareable)
 - Match the analysis criteria
+- Feel complete and satisfying (not cut off mid-thought)
 
 Return ONLY the clips in JSON format. If no viral moments are found, return an empty array."""
 
@@ -67,7 +73,7 @@ Return ONLY the clips in JSON format. If no viral moments are found, return an e
 
         return {
             "clips": clips,
-            "status": AnalysisStatus.COMPLETED
+            "status": AnalysisStatus.EDITING_VIDEO
         }
 
     except Exception as e:

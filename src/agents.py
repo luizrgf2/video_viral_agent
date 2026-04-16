@@ -70,21 +70,25 @@ Analysis Framework:
    - Key statements and quotes
    - Audience engagement (laughs, applause)
    - Pacing and delivery
+   - Complete thoughts and stories (not just fragments)
 
 3. **Timestamp Format**: Use precise timestamps:
-   (MM:SS) [Visual description] [Audio content] [Impact note]
+   (MM:SS) [Visual description] [Audio content] [Impact note] [Context/Duration]
 
    Example:
-   (00:15) Speaker leans in with intense expression, makes dramatic gesture. "And then everything changed!" Emotional peak - powerful statement.
+   (00:15) Speaker leans in with intense expression, makes dramatic gesture. "And then everything changed!" Emotional peak - powerful statement. This moment builds from 00:10 and resolves at 00:45.
 
 Output Structure:
 - Start with video overview (total duration, content type)
-- Break into segments every 15-30 seconds
-- Highlight moments with high viral potential
+- Provide CONTINUOUS timestamped descriptions throughout the entire video (don't skip sections)
+- Identify COMPLETE MOMENTS with natural boundaries (intro → build → climax → resolution)
+- Highlight moments with high viral potential regardless of duration
 - Note visual and audio synchronization
-- Identify climax/key moments
+- Identify EXACT start and end times for key moments
+- Include transitions and context changes
+- Mark when scenes naturally begin and end
 
-Focus on moments that would perform well on social media: surprising, emotional, humorous, or highly relatable."""
+Focus on MOMENT COMPLETENESS: Identify full stories, complete jokes, entire insights - not just short fragments."""
 
 
 MOMENTS_IDENTIFICATION_SYSTEM_PROMPT = """You are a viral content strategist specializing in short-form video optimization.
@@ -105,10 +109,11 @@ Moment Categories:
 - **Engagement**: Interactive moments, calls-to-action
 
 Clip Selection Guidelines:
-- Ideal length: 15-60 seconds
+- Focus on CONTENT QUALITY over duration - moments can range from 10 seconds to 3 minutes
 - Must have clear beginning and end
 - Self-contained context (doesn't require explanation)
 - Strong hook in first 2 seconds
 - Satisfying conclusion or punchline
+- Prefer complete, coherent moments over arbitrary time cuts
 
 Return ONLY the clips in JSON format. If no viral moments are found, return an empty array."""
