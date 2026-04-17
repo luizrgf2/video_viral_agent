@@ -33,9 +33,34 @@ def format_timestamp(seconds: float) -> str:
     return f"{minutes:02d}:{secs:02d}"
 
 
+def detect_natural_boundaries(transcription_segments: list, pause_threshold: float = 2.0) -> list[dict]:
+    """
+    Detect natural pause boundaries between segments.
+
+    Args:
+        transcription_segments: List of segments with start/end times
+        pause_threshold: Minimum gap in seconds to consider as a natural pause
+
+    Returns:
+        list: Indices where natural pauses occur
+    """
+    natural_boundaries = []
+
+    for i in range(len(transcription_segments) - 1):
+        current_end = transcription_segments[i]["end"]
+        next_start = transcription_segments[i + 1]["start"]
+        gap = next_start - current_end
+
+        if gap >= pause_threshold:
+            natural_boundaries.append(i)
+
+    return natural_boundaries
+
+
 def expand_clip_with_context(clip_start: str, clip_end: str, transcription_segments: list) -> tuple[str, str]:
     """
-    Expand clip timestamps to include 2 segments before and 1 segment after.
+    Expand clip timestamps to include 2 segments before and 1 after,
+    respecting natural pause boundaries.
 
     Args:
         clip_start: Original start timestamp (MM:SS)
@@ -48,6 +73,11 @@ def expand_clip_with_context(clip_start: str, clip_end: str, transcription_segme
     try:
         clip_start_seconds = parse_timestamp_to_seconds(clip_start)
         clip_end_seconds = parse_timestamp_to_seconds(clip_end)
+
+        # Detect natural pause boundaries
+        natural_boundaries = detect_natural_boundaries(transcription_segments, pause_threshold=2.0)
+
+        logger.info(f"[{NODE_ID}] Detected {len(natural_boundaries)} natural pause boundaries")
 
         # Find the segment indices that overlap with this clip
         clip_segment_indices = []
@@ -65,11 +95,41 @@ def expand_clip_with_context(clip_start: str, clip_end: str, transcription_segme
         first_clip_index = min(clip_segment_indices)
         last_clip_index = max(clip_segment_indices)
 
-        # Expand: 2 segments before (if available)
-        expanded_start_index = max(0, first_clip_index - 2)
+        # Expand backwards: 2 segments, but stop at natural boundaries
+        expanded_start_index = first_clip_index
+        segments_added_backwards = 0
+        max_segments_back = 2
 
-        # Expand: 1 segment after (if available)
-        expanded_end_index = min(len(transcription_segments) - 1, last_clip_index + 1)
+        for i in range(first_clip_index - 1, -1, -1):
+            if segments_added_backwards >= max_segments_back:
+                break
+
+            # Check if there's a natural boundary between i and i+1
+            if i in natural_boundaries:
+                # Found a natural pause, stop expanding
+                logger.info(f"[{NODE_ID}] Stopped backward expansion at natural boundary (segment {i})")
+                break
+
+            expanded_start_index = i
+            segments_added_backwards += 1
+
+        # Expand forwards: 1 segment, but stop at natural boundaries
+        expanded_end_index = last_clip_index
+        segments_added_forwards = 0
+        max_segments_forward = 1
+
+        for i in range(last_clip_index + 1, len(transcription_segments)):
+            if segments_added_forwards >= max_segments_forward:
+                break
+
+            # Check if there's a natural boundary between i-1 and i
+            if i - 1 in natural_boundaries:
+                # Found a natural pause, stop expanding
+                logger.info(f"[{NODE_ID}] Stopped forward expansion at natural boundary (segment {i-1})")
+                break
+
+            expanded_end_index = i
+            segments_added_forwards += 1
 
         # Get new timestamps
         expanded_start = transcription_segments[expanded_start_index]["start"]
@@ -115,9 +175,11 @@ async def identify_moments_node(state: VideoAnalysisState) -> dict:
 
             # CRITICAL INSTRUCTIONS
             1. Identify ONLY moments that EXACTLY match the criteria above
-            2. If NO moments match the criteria, return an empty array
-            3. Do NOT guess or approximate - be precise
-            4. Include sufficient context (2-3 segments before and after) for completeness
+            2. GROUP RELATED MOMENTS that are close to each other into longer, coherent clips
+            3. MINIMUM DURATION: Each clip MUST be at least 30 seconds long
+            4. If a moment doesn't have enough content to reach 30 seconds, DO NOT include it
+            5. Combine adjacent segments that discuss the same topic to create 30+ second clips
+            6. If NO moments match the criteria AND have 30+ seconds of content, return an empty array
 
             For each matching moment, provide:
             1. Start time (MM:SS or HH:MM:SS format)
@@ -125,7 +187,9 @@ async def identify_moments_node(state: VideoAnalysisState) -> dict:
             3. Reason: Why this moment matches the criteria
             4. Matched criterion: Which analysis criterion this moment matches
 
-            Return ONLY the clips in JSON format. If no moments match, return {{"clips": []}}."""
+            IMPORTANT: Focus on creating COMPLETE, SUBSTANTIAL clips (minimum 30 seconds) that provide full context on the topic. Avoid creating multiple tiny clips when they can be grouped into one longer, more valuable clip.
+
+            Return ONLY the clips in JSON format. If no moments match or are too short, return {{"clips": []}}."""
 
         messages = [
             {"role": "system", "content": "You are a video content analyst. Identify moments that EXACTLY match the user's specified criteria. Return ONLY valid JSON."},
@@ -141,39 +205,9 @@ async def identify_moments_node(state: VideoAnalysisState) -> dict:
 
         logger.info(f"[{NODE_ID}] Identified {len(clips)} moments", extra={"clip_count": len(clips)})
 
-        # Expand each clip to include context (2 segments before, 1 after)
-        if state.transcriptionSegments and clips:
-            expanded_clips = []
-
-            for clip in clips:
-                # Get original timestamps
-                original_start = clip.startTime
-                original_end = clip.endTime
-
-                # Expand with context
-                expanded_start, expanded_end = expand_clip_with_context(
-                    original_start,
-                    original_end,
-                    state.transcriptionSegments
-                )
-
-                # Create new clip with expanded timestamps
-                expanded_clip = ClipInfo(
-                    startTime=expanded_start,
-                    endTime=expanded_end,
-                    reason=clip.reason,
-                    matchedCriterion=clip.matchedCriterion
-                )
-
-                expanded_clips.append(expanded_clip)
-
-                logger.info(f"[{NODE_ID}] Expanded clip: {original_start}-{original_end} → {expanded_start}-{expanded_end}")
-
-            clips = expanded_clips
-
         return {
             "clips": clips,
-            "status": AnalysisStatus.EDITING_VIDEO
+            "status": AnalysisStatus.REFINING_CONTEXT
         }
 
     except Exception as e:

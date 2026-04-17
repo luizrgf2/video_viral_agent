@@ -7,6 +7,7 @@ class AnalysisStatus(str, Enum):
     PENDING = "pending"
     ANALYZING_VIDEO = "analyzing_video"
     IDENTIFYING_MOMENTS = "identifying_moments"
+    REFINING_CONTEXT = "refining_context"
     EDITING_VIDEO = "editing_video"
     COMPLETED = "completed"
     FAILED = "failed"

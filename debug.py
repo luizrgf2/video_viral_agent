@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 async def debug_main():
     video_path = "/home/luiz/Downloads/video_to_test.mp4"
-    analysis = ["Capture somente partes onde ele cita desenvolvedores plenos e somente isso, se não citar desenvolvedor pleno eu não quero"]
+    analysis = ["Foque nos conteudos que destaca o que o dev junior deve aprender, mas pegue somente dicas longas e validas"]
 
     load_dotenv()
 
