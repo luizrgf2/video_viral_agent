@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 async def debug_main():
     video_path = "/home/luiz/Downloads/video_to_test.mp4"
-    analysis = ["Foque somente nas partes onde ele cita o ceo da amazon e a amazon"]
+    analysis = ["Capture somente partes onde ele cita desenvolvedores plenos e somente isso, se não citar desenvolvedor pleno eu não quero"]
 
     load_dotenv()
 
@@ -35,8 +35,15 @@ async def debug_main():
 
         result = await run_workflow(initial_state)
 
+        # Show transcription if available
+        if result.get("transcription"):
+            print(f"\n📝 Transcription completed:")
+            print(f"   {len(result["transcription"])} characters")
+            print(f"   {len(result.get("transcriptionSegments", []))} segments")
+            print()
+
         if result["status"] == AnalysisStatus.COMPLETED and result["clips"]:
-            print(f"\n✅ Found {len(result["clips"])} viral moments:\n")
+            print(f"\n✅ Selected {len(result["clips"])} best viral moments:\n")
 
             for i, clip in enumerate(result["clips"], 1):
                 print(f"{i}. {clip.startTime} - {clip.endTime}")

@@ -27,7 +27,7 @@ vlmModel = ChatOpenAI(
     api_key=OPENROUTER_API_KEY,
     base_url=OPENROUTER_BASE_URL,
     default_headers=get_openrouter_headers(),
-    temperature=0.7,
+    temperature=0,
 )
 
 
@@ -36,7 +36,7 @@ llmModel = ChatOpenAI(
     api_key=OPENROUTER_API_KEY,
     base_url=OPENROUTER_BASE_URL,
     default_headers=get_openrouter_headers(),
-    temperature=0.7,
+    temperature=0,
 )
 
 

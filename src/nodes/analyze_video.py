@@ -13,7 +13,6 @@ NODE_ID = "analyze_video"
 
 async def analyze_video_node(state: VideoAnalysisState) -> dict:
     logger.info(f"[{NODE_ID}] Starting video analysis", extra={"videoPath": state.videoPath})
-    result = await vlmModel.ainvoke(HumanMessage("Ola tudo bem ?").content)
 
     try:
         video_path = Path(state.videoPath)

@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END
 from src.state import VideoAnalysisState
-from src.nodes import analyze_video_node, identify_moments_node, edit_video_node
+from src.nodes import transcribe_audio_node, identify_moments_node, edit_video_node
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,13 +9,13 @@ logger = logging.getLogger(__name__)
 def create_workflow():
     workflow = StateGraph(VideoAnalysisState)
 
-    workflow.add_node("analyze_video", analyze_video_node)
+    workflow.add_node("transcribe_audio", transcribe_audio_node)
     workflow.add_node("identify_moments", identify_moments_node)
     workflow.add_node("edit_video", edit_video_node)
 
-    workflow.set_entry_point("analyze_video")
+    workflow.set_entry_point("transcribe_audio")
 
-    workflow.add_edge("analyze_video", "identify_moments")
+    workflow.add_edge("transcribe_audio", "identify_moments")
     workflow.add_edge("identify_moments", "edit_video")
     workflow.add_edge("edit_video", END)
 
