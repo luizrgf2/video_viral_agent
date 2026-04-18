@@ -9,6 +9,7 @@ class AnalysisStatus(str, Enum):
     IDENTIFYING_MOMENTS = "identifying_moments"
     REFINING_CONTEXT = "refining_context"
     EDITING_VIDEO = "editing_video"
+    ADDING_SUBTITLES = "adding_subtitles"
     COMPLETED = "completed"
     FAILED = "failed"
 
@@ -29,6 +30,7 @@ class VideoAnalysisState(BaseModel):
     candidateMoments: Optional[List[dict]] = Field(None, description="Candidate moments identified for deeper analysis")
     clips: Optional[List[ClipInfo]] = Field(None, description="Identified viral moments")
     outputClips: Optional[List[str]] = Field(None, description="Paths to generated clip files")
+    subtitledClips: Optional[List[str]] = Field(None, description="Paths to clip files with subtitles")
     error: Optional[str] = Field(None, description="Error message if failed")
     status: AnalysisStatus = Field(default=AnalysisStatus.PENDING, description="Current workflow status")
 

@@ -17,6 +17,7 @@ O Video Viral Agent analisa vídeos longos e extrai automaticamente os momentos 
 2. Identifica os momentos que batem com seu critério
 3. Refina os cortes para não cortar palavras no meio
 4. Gera clips de vídeo com os momentos identificados
+5. **Adiciona legendas sincronizadas baseadas na transcrição** (opcional)
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -33,7 +34,8 @@ O Video Viral Agent analisa vídeos longos e extrai automaticamente os momentos 
 
 ### Edição de Vídeo
 - **MoviePy 2.0** - Manipulação e edição de vídeos
-- **FFmpeg** - Processamento de vídeo (backend)
+- **FFmpeg** - Processamento de vídeo, cortes naturais e **legendas**
+- **Waveform Analysis** - Detecção de pausas naturais com librosa
 
 ### IA / LLM
 - **OpenRouter** - Acesso a múltiplos modelos LLM
@@ -149,6 +151,7 @@ asyncio.run(process_video())
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
 │  1. Transcrição de Áudio                                     │
+│     ├─ Otimização: Compressão para 32kbps MP3 (90% menor)   │
 │     ├─ Local: faster-whisper (CTranslate2)                   │
 │     └─ Cloud: Groq API (Whisper Large v3)                   │
 │         │                                                    │
@@ -162,7 +165,12 @@ asyncio.run(process_video())
 │         │                                                    │
 │         v                                                    │
 │  4. Edição de Vídeo                                          │
+│     ├─ Análise de waveform para cortes naturais             │
 │     └─ MoviePy corta e exporta os clips                      │
+│         │                                                    │
+│         v                                                    │
+│  5. Geração de Legendas (NOVO!)                             │
+│     └─ FFmpeg drawtext adiciona legendas sincronizadas       │
 │                                                               │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -179,12 +187,16 @@ video_viral_agent/
 │   │   ├── transcribe_audio.py      # Transcrição (local/Groq)
 │   │   ├── identify_moments.py      # Identificação com LLM
 │   │   ├── refine_clip_context.py   # Refinamento de cortes
-│   │   └── edit_video.py            # Edição de vídeo
+│   │   ├── edit_video.py            # Edição de vídeo com waveform
+│   │   └── add_subtitles.py         # Geração de legendas (NOVO!)
+│   ├── utils/
+│   │   └── waveform_analyzer.py     # Análise de áudio para cortes
 │   ├── agents.py             # Configuração de LLMs
 │   ├── state.py              # Estado da aplicação
 │   └── workflow.py           # Orquestração LangGraph
 ├── uploads/                  # Vídeos enviados (temporário)
 ├── output_clips/             # Clips processados
+├── output_clips_subtitled/   # Clips com legendas (NOVO!)
 └── .env                      # Variáveis de ambiente
 ```
 
@@ -309,6 +321,87 @@ Critério: "Momentos onde explica conceitos técnicos de programação"
 - **CPU:** Recomendado 4+ cores
 - **RAM:** 8GB mínimo, 16GB recomendado
 - **Disco:** 500MB+ para vídeos temporários
+
+## 🎬 Geração de Legendas (NOVO!)
+
+O sistema agora gera **legendas automáticas** sincronizadas com a transcrição usando **FFmpeg**!
+
+### Como Funciona
+
+1. **Sincronização Automática**: As legendas são sincronizadas com os timestamps exatos da transcrição
+2. **Renderização FFmpeg**: Usa FFmpeg drawtext filter (não precisa de ImageMagick)
+3. **Formatação Profissional**: Texto branco com fundo preto semi-transparente
+4. **Posicionamento Inteligente**: Legendas aparecem na parte inferior da tela
+5. **Baseado em Segmentos**: Cada segmento da transcrição vira uma legenda
+
+### Requisitos
+
+**FFmpeg** (já necessário para o projeto):
+```bash
+# Ubuntu/Debian
+sudo apt install ffmpeg
+
+# macOS
+brew install ffmpeg
+```
+
+✅ **Sem dependências extras!** Usa FFmpeg que você já tem instalado.
+
+### Formato das Legendas
+
+- **Cor**: Texto branco sobre fundo preto (50% transparência)
+- **Tamanho**: Fonte de 24px (ajustado para caber no vídeo)
+- **Posição**: Parte inferior da tela (centralizado)
+- **Duração**: Sincronizada com cada segmento da transcrição
+- **Escapamento**: Caracteres especiais são escapados automaticamente
+- **Limite de texto**: Máximo 100 caracteres por legenda
+
+### Saída
+
+Os clips com legendas são salvos em `output_clips_subtitled/`:
+```
+subtitled_clip_001_30-35.mp4   # Clip com legendas (3.21 MB)
+subtitled_clip_002_60-65.mp4   # Clip com legendas
+```
+
+### Personalização
+
+Você pode personalizar as legendas editando `src/nodes/add_subtitles.py`:
+```python
+# Tamanho da fonte (padrão: 24px)
+fontsize=24  # Reduzido de 48 para caber melhor
+
+# Cor do texto
+font_color="white"
+
+# Cor do fundo (formato: "cor@opacidade")
+background_color="black@0.5"  # 50% de transparência
+
+# Posição ("top", "center", "bottom")
+position="bottom"
+
+# Largura da borda da caixa (reduzido de 5 para 3)
+boxborderw=3
+
+# Espaçamento entre linhas
+line_spacing=2
+
+# Limite de caracteres por legenda
+max_chars=100
+```
+
+### Exemplo Visual
+
+```
+┌─────────────────────────────────────┐
+│         [vídeo sendo reproduzido]   │
+│                                     │
+│ ┌───────────────────────────────┐ │
+│ │ Este é um momento importante  │ │ ← Legenda sincronizada
+│ │ sobre desenvolvimento         │ │    (30.5s - 33.2s)
+│ └───────────────────────────────┘ │
+└─────────────────────────────────────┘
+```
 
 ## 📄 Licença
 
