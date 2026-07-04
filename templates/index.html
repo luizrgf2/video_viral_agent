@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Viral Agent - Extrator de Momentos Virais</title>
+    <title>Video Viral Agent</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -27,24 +27,15 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        .upload-area:hover {
-            border-color: #764ba2;
-            background: #e9ecef;
-        }
-        .upload-area.dragover {
-            border-color: #28a745;
-            background: #d4edda;
-        }
+        .upload-area:hover { border-color: #764ba2; background: #e9ecef; }
+        .upload-area.dragover { border-color: #28a745; background: #d4edda; }
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
             padding: 12px 30px;
             font-weight: 600;
         }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .video-card {
             border: none;
             border-radius: 15px;
@@ -52,10 +43,7 @@
             margin-bottom: 20px;
             overflow: hidden;
         }
-        .video-card video {
-            width: 100%;
-            border-radius: 15px 15px 0 0;
-        }
+        .video-card video { width: 100%; border-radius: 15px 15px 0 0; }
         .status-processing {
             background: #fff3cd;
             border-left: 4px solid #ffc107;
@@ -70,156 +58,220 @@
             border-radius: 10px;
             margin: 20px 0;
         }
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
+        .status-failed {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
         }
+        .spinner-border { width: 3rem; height: 3rem; }
         #videoPreview {
             max-width: 100%;
             max-height: 300px;
             border-radius: 10px;
             margin: 20px 0;
         }
+        .mode-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0;
+        }
+        .mode-tab {
+            background: transparent;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #6c757d;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .mode-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        .mode-tab:hover:not(.active) {
+            color: #764ba2;
+        }
+        .mode-panel { display: none; }
+        .mode-panel.active { display: block; }
+        .info-box {
+            background: #e7f5ff;
+            border-left: 4px solid #667eea;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+        .prompt-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .prompt-chip {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .prompt-chip:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="main-container">
-            <h1 class="text-center mb-4">
-                🎬 Video Viral Agent
-            </h1>
+            <h1 class="text-center mb-2">🎬 Video Viral Agent</h1>
             <p class="text-center text-muted mb-5">
-                Extraia automaticamente os momentos virais do seu vídeo usando IA
+                Extraia momentos virais ou edite seus vídeos automaticamente com IA
             </p>
 
-            <!-- Upload Form -->
-            <div class="card">
-                <div class="card-body">
-                    <form id="uploadForm">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Selecione o vídeo:</label>
-                            <div class="upload-area" id="uploadArea">
-                                <input type="file" id="videoFile" accept=".mp4,.mov,.avi,.mkv" style="display: none;">
-                                <div id="uploadContent">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-cloud-upload mb-3" viewBox="0 0 16 16">
-                                        <path d="M7.636 13V3a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5zm0 1a.5.5 0 0 1 .5.5h1a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-3zm3.5-4.5a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-5z"/>
-                                        <path fill-rule="evenodd" d="M5 3a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V3zm3 4a.5.5 0 0 1 .5.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
-                                    </svg>
-                                    <h5>Clique ou arraste o vídeo aqui</h5>
-                                    <p class="text-muted mb-0">MP4, MOV, AVI, MKV (máx. 500MB)</p>
-                                </div>
-                                <div id="fileInfo" style="display: none;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-file-earmark-play mb-2 text-success" viewBox="0 0 16 16">
-                                        <path d="M6 6.855v-1.7h1.7v1.7H6zm0 3.4v-1.7h1.7v1.7H6zm-3.4 0v-1.7h1.7v1.7H2.6zm0-3.4v-1.7h1.7v1.7H2.6zm6.8 0v-1.7h1.7v1.7H9.4zm-3.4 0v-1.7h1.7v1.7H6zm0 3.4v-1.7h1.7v1.7H6z"/>
-                                        <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 1.5 1.5 0 0 0 9.5 3zm-3.4 6.8v-1.7h1.7v1.7H6.1zm0 3.4v-1.7h1.7v1.7H6.1z"/>
-                                    </svg>
-                                    <h5 id="fileName" class="text-success"></h5>
-                                    <p id="fileSize" class="text-muted mb-0"></p>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearFile()">Trocar arquivo</button>
+            <!-- Mode tabs -->
+            <div class="mode-tabs">
+                <button class="mode-tab active" data-mode="clips" onclick="switchMode('clips')">
+                    ✂️ Extrair Clipes
+                </button>
+                <button class="mode-tab" data-mode="videos" onclick="switchMode('videos')">
+                    🎞️ Editar Vídeo
+                </button>
+            </div>
+
+            <!-- ============ CLIPS PANEL ============ -->
+            <div class="mode-panel active" id="clipsPanel">
+                <div class="info-box">
+                    <strong>Como funciona:</strong> Descreva um critério e a IA extrai N clipes curtos do vídeo que combinam com ele.
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <form id="uploadFormClips">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Selecione o vídeo:</label>
+                                <div class="upload-area" id="uploadAreaClips">
+                                    <input type="file" id="videoFileClips" accept=".mp4,.mov,.avi,.mkv" style="display: none;">
+                                    <div id="uploadContentClips">
+                                        <h5>🎬 Clique ou arraste o vídeo aqui</h5>
+                                        <p class="text-muted mb-0">MP4, MOV, AVI, MKV (máx. 500MB)</p>
+                                    </div>
+                                    <div id="fileInfoClips" style="display: none;">
+                                        <h5 id="fileNameClips" class="text-success"></h5>
+                                        <p id="fileSizeClips" class="text-muted mb-0"></p>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="clearFile('clips')">Trocar arquivo</button>
+                                    </div>
                                 </div>
                             </div>
+
+                            <div class="mb-3">
+                                <label for="criteria" class="form-label fw-bold">Critério de análise:</label>
+                                <textarea class="form-control" id="criteria" rows="3"
+                                    placeholder="Ex: Capture partes onde ele cita desenvolvedores plenos"></textarea>
+                                <div class="form-text">Descreva quais momentos você quer extrair do vídeo</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100" id="submitBtnClips" disabled>
+                                🚀 Processar Vídeo
+                            </button>
+                        </form>
+
+                        <div id="statusAreaClips"></div>
+                        <div id="videoPreviewContainerClips" style="display: none;">
+                            <video id="videoPreviewClips" controls></video>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="criteria" class="form-label fw-bold">Critério de análise:</label>
-                            <textarea class="form-control" id="criteria" rows="3"
-                                placeholder="Ex: Capture somente partes onde ele cita desenvolvedores plenos e somente isso, se não citar desenvolvedor pleno eu não quero"></textarea>
-                            <div class="form-text">Descreva quais momentos você quer extrair do vídeo</div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100" id="submitBtn" disabled>
-                            🚀 Processar Vídeo
-                        </button>
-                    </form>
-
-                    <!-- Status Messages -->
-                    <div id="statusArea"></div>
-
-                    <!-- Video Preview -->
-                    <div id="videoPreviewContainer" style="display: none;">
-                        <video id="videoPreview" controls></video>
                     </div>
+                </div>
+
+                <div id="resultsSectionClips" style="display: none;">
+                    <h2 class="text-center mb-4">🎯 Momentos Virais Identificados</h2>
+                    <div id="clipsContainer"></div>
                 </div>
             </div>
 
-            <!-- Results Section -->
-            <div id="resultsSection" style="display: none;">
-                <h2 class="text-center mb-4">🎯 Momentos Virais Identificados</h2>
-                <div id="clipsContainer"></div>
+            <!-- ============ VIDEOS PANEL ============ -->
+            <div class="mode-panel" id="videosPanel">
+                <div class="info-box">
+                    <strong>Como funciona:</strong> Escreva como você quer editar o vídeo em linguagem natural.
+                    A IA decide o que cortar e devolve <strong>um vídeo editado</strong>. Não há menus — só descreva.
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <form id="uploadFormVideos">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Selecione o vídeo (MP4):</label>
+                                <div class="upload-area" id="uploadAreaVideos">
+                                    <input type="file" id="videoFileVideos" accept=".mp4" style="display: none;">
+                                    <div id="uploadContentVideos">
+                                        <h5>🎞️ Clique ou arraste o vídeo aqui</h5>
+                                        <p class="text-muted mb-0">Somente MP4 (máx. 500MB)</p>
+                                    </div>
+                                    <div id="fileInfoVideos" style="display: none;">
+                                        <h5 id="fileNameVideos" class="text-success"></h5>
+                                        <p id="fileSizeVideos" class="text-muted mb-0"></p>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="clearFile('videos')">Trocar arquivo</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editPrompt" class="form-label fw-bold">Como você quer editar o vídeo?</label>
+                                <textarea class="form-control" id="editPrompt" rows="4"
+                                    placeholder="Ex: Deixe o vídeo direto ao ponto, removendo divagações, off-topic e momentos parados."></textarea>
+                                <div class="form-text">A IA analisa seu pedido e decide se precisa ver o vídeo ou só ouvir.</div>
+
+                                <div class="prompt-suggestions">
+                                    <span class="prompt-chip" onclick="fillPrompt(this)">Direto ao ponto: corte divagações e off-topic</span>
+                                    <span class="prompt-chip" onclick="fillPrompt(this)">Remova fillers, pausas longas e respirações</span>
+                                    <span class="prompt-chip" onclick="fillPrompt(this)">Destaque só os momentos de alta energia</span>
+                                    <span class="prompt-chip" onclick="fillPrompt(this)">Corte quando aparecer o logo na tela</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100" id="submitBtnVideos" disabled>
+                                ✂️ Editar Vídeo
+                            </button>
+                        </form>
+
+                        <div id="statusAreaVideos"></div>
+                        <div id="videoPreviewContainerVideos" style="display: none;">
+                            <video id="videoPreviewVideos" controls></video>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="resultsSectionVideos" style="display: none;">
+                    <h2 class="text-center mb-4">🎞️ Vídeo Editado</h2>
+                    <div id="videoResultContainer"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const uploadArea = document.getElementById('uploadArea');
-        const videoFile = document.getElementById('videoFile');
-        const uploadContent = document.getElementById('uploadContent');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const fileSize = document.getElementById('fileSize');
-        const submitBtn = document.getElementById('submitBtn');
-        const statusArea = document.getElementById('statusArea');
-        const resultsSection = document.getElementById('resultsSection');
-        const clipsContainer = document.getElementById('clipsContainer');
-        const videoPreview = document.getElementById('videoPreview');
-        const videoPreviewContainer = document.getElementById('videoPreviewContainer');
-
-        let currentSessionId = null;
-        let statusCheckInterval = null;
-
-        // Drag and drop
-        uploadArea.addEventListener('click', () => videoFile.click());
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFileSelect(files[0]);
-            }
-        });
-
-        videoFile.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFileSelect(e.target.files[0]);
-            }
-        });
-
-        function handleFileSelect(file) {
-            if (!file.name.match(/\.(mp4|mov|avi|mkv)$/i)) {
-                alert('Por favor, selecione um arquivo de vídeo válido (MP4, MOV, AVI, MKV)');
-                return;
-            }
-
-            // Show file info
-            uploadContent.style.display = 'none';
-            fileInfo.style.display = 'block';
-            fileName.textContent = file.name;
-            fileSize.textContent = formatFileSize(file.size);
-            submitBtn.disabled = false;
-
-            // Preview video
-            const url = URL.createObjectURL(file);
-            videoPreview.src = url;
-            videoPreviewContainer.style.display = 'block';
+        // ===== Mode switching =====
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+            document.querySelector(`.mode-tab[data-mode="${mode}"]`).classList.add('active');
+            document.getElementById(mode + 'Panel').classList.add('active');
         }
 
-        function clearFile() {
-            videoFile.value = '';
-            uploadContent.style.display = 'block';
-            fileInfo.style.display = 'none';
-            submitBtn.disabled = true;
-            videoPreview.src = '';
-            videoPreviewContainer.style.display = 'none';
+        function fillPrompt(el) {
+            document.getElementById('editPrompt').value = el.textContent;
         }
 
+        // ===== Shared helpers =====
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -228,137 +280,275 @@
             return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
         }
 
-        // Form submission
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        function setupUploadArea(prefix, acceptRegex, onLoad) {
+            const area = document.getElementById('uploadArea' + prefix);
+            const input = document.getElementById('videoFile' + prefix);
+            const contentDiv = document.getElementById('uploadContent' + prefix);
+            const infoDiv = document.getElementById('fileInfo' + prefix);
+            const nameEl = document.getElementById('fileName' + prefix);
+            const sizeEl = document.getElementById('fileSize' + prefix);
+            const submitBtn = document.getElementById('submitBtn' + prefix);
+            const preview = document.getElementById('videoPreview' + prefix);
+            const previewContainer = document.getElementById('videoPreviewContainer' + prefix);
+
+            area.addEventListener('click', () => input.click());
+            area.addEventListener('dragover', (e) => { e.preventDefault(); area.classList.add('dragover'); });
+            area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+            });
+            input.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) handleFile(e.target.files[0]);
+            });
+
+            function handleFile(file) {
+                if (!file.name.match(acceptRegex)) {
+                    alert('Formato inválido. Aceitos: ' + (prefix === 'clips' ? 'MP4, MOV, AVI, MKV' : 'MP4'));
+                    return;
+                }
+                contentDiv.style.display = 'none';
+                infoDiv.style.display = 'block';
+                nameEl.textContent = file.name;
+                sizeEl.textContent = formatFileSize(file.size);
+                submitBtn.disabled = false;
+                preview.src = URL.createObjectURL(file);
+                previewContainer.style.display = 'block';
+                if (onLoad) onLoad(file);
+            }
+
+            return { handleFile };
+        }
+
+        function clearFile(prefix) {
+            const input = document.getElementById('videoFile' + prefix);
+            input.value = '';
+            document.getElementById('uploadContent' + prefix).style.display = 'block';
+            document.getElementById('fileInfo' + prefix).style.display = 'none';
+            document.getElementById('submitBtn' + prefix).disabled = true;
+            const preview = document.getElementById('videoPreview' + prefix);
+            preview.src = '';
+            document.getElementById('videoPreviewContainer' + prefix).style.display = 'none';
+        }
+
+        // ===== CLIPS panel =====
+        let clipsSessionId = null;
+        let clipsTimer = null;
+        setupUploadArea('Clips', /\.(mp4|mov|avi|mkv)$/i);
+
+        document.getElementById('uploadFormClips').addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const file = videoFile.files[0];
+            const file = document.getElementById('videoFileClips').files[0];
             const criteria = document.getElementById('criteria').value;
-
             if (!file || !criteria) {
-                alert('Por favor, selecione um vídeo e informe o critério de análise');
+                alert('Selecione um vídeo e informe o critério');
                 return;
             }
 
-            // Show processing status
-            submitBtn.disabled = true;
-            statusArea.innerHTML = `
+            document.getElementById('submitBtnClips').disabled = true;
+            document.getElementById('statusAreaClips').innerHTML = `
                 <div class="status-processing">
                     <div class="text-center">
-                        <div class="spinner-border text-warning mb-3" role="status"></div>
+                        <div class="spinner-border text-warning mb-3"></div>
                         <h5>🎬 Processando vídeo...</h5>
-                        <p class="mb-0">Isso pode levar alguns minutos dependendo do tamanho do vídeo</p>
                     </div>
-                </div>
-            `;
+                </div>`;
 
             const formData = new FormData();
             formData.append('video', file);
             formData.append('criteria', criteria);
 
             try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+                const resp = await fetch('/upload', { method: 'POST', body: formData });
+                const result = await resp.json();
+                if (!resp.ok) throw new Error(result.error || 'Erro no upload');
 
-                const result = await response.json();
-
-                if (response.ok) {
-                    currentSessionId = result.session_id;
-                    statusArea.innerHTML = `
-                        <div class="status-processing">
-                            <div class="text-center">
-                                <div class="spinner-border text-info mb-3" role="status"></div>
-                                <h5>📝 Analisando áudio e identificando momentos...</h5>
-                                <p class="mb-0">Por favor, aguarde enquanto a IA processa seu vídeo</p>
-                            </div>
+                clipsSessionId = result.session_id;
+                document.getElementById('statusAreaClips').innerHTML = `
+                    <div class="status-processing">
+                        <div class="text-center">
+                            <div class="spinner-border text-info mb-3"></div>
+                            <h5>📝 Analisando áudio e identificando momentos...</h5>
                         </div>
-                    `;
-
-                    // Start checking status
-                    checkStatus();
-                } else {
-                    throw new Error(result.error || 'Erro ao fazer upload');
-                }
-            } catch (error) {
-                statusArea.innerHTML = `
-                    <div class="alert alert-danger" role="alert">
-                        <h5>❌ Erro: ${error.message}</h5>
-                    </div>
-                `;
-                submitBtn.disabled = false;
+                    </div>`;
+                pollClipsStatus();
+            } catch (err) {
+                document.getElementById('statusAreaClips').innerHTML = `
+                    <div class="alert alert-danger"><h5>❌ Erro: ${err.message}</h5></div>`;
+                document.getElementById('submitBtnClips').disabled = false;
             }
         });
 
-        async function checkStatus() {
-            if (!currentSessionId) return;
-
+        async function pollClipsStatus() {
+            if (!clipsSessionId) return;
             try {
-                const response = await fetch(`/status/${currentSessionId}`);
-                const result = await response.json();
-
+                const resp = await fetch(`/status/${clipsSessionId}`);
+                const result = await resp.json();
                 if (result.status === 'completed') {
-                    // Stop checking status
-                    if (statusCheckInterval) {
-                        clearInterval(statusCheckInterval);
-                    }
-
-                    // Show completed status
-                    statusArea.innerHTML = `
+                    document.getElementById('statusAreaClips').innerHTML = `
                         <div class="status-completed">
-                            <div class="text-center">
-                                <h5>✅ Processamento concluído!</h5>
-                                <p class="mb-0">Encontramos ${result.clips_count} momentos virais no seu vídeo</p>
-                            </div>
-                        </div>
-                    `;
-
-                    // Load clips
-                    await loadClips();
-
-                } else if (result.status === 'processing') {
-                    // Continue checking
-                    statusCheckInterval = setTimeout(checkStatus, 3000);
+                            <h5>✅ Processamento concluído!</h5>
+                            <p class="mb-0">${result.clips_count || ''} clipes gerados</p>
+                        </div>`;
+                    await loadClipsResults();
+                } else if (result.status === 'failed') {
+                    document.getElementById('statusAreaClips').innerHTML = `
+                        <div class="status-failed">
+                            <h5>❌ Falha: ${result.error || 'erro desconhecido'}</h5>
+                        </div>`;
+                    document.getElementById('submitBtnClips').disabled = false;
+                } else {
+                    clipsTimer = setTimeout(pollClipsStatus, 3000);
                 }
-            } catch (error) {
-                console.error('Error checking status:', error);
-                statusCheckInterval = setTimeout(checkStatus, 3000);
+            } catch (e) {
+                clipsTimer = setTimeout(pollClipsStatus, 3000);
             }
         }
 
-        async function loadClips() {
+        async function loadClipsResults() {
+            const resp = await fetch(`/clips/${clipsSessionId}`);
+            const result = await resp.json();
+            const container = document.getElementById('clipsContainer');
+            document.getElementById('resultsSectionClips').style.display = 'block';
+
+            if (!result.clips || result.clips.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">Nenhum momento encontrado.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            result.clips.forEach((clip, i) => {
+                const card = document.createElement('div');
+                card.className = 'card video-card';
+                card.innerHTML = `
+                    <video controls preload="metadata">
+                        <source src="${clip.url}" type="video/mp4">
+                    </video>
+                    <div class="card-body">
+                        <h5 class="card-title">🎬 Momento ${i + 1}</h5>
+                        <p class="card-text"><strong>Tamanho:</strong> ${clip.size_mb} MB</p>
+                        <a href="${clip.url}" download class="btn btn-sm btn-primary">⬇️ Download</a>
+                    </div>`;
+                container.appendChild(card);
+            });
+            document.getElementById('submitBtnClips').disabled = false;
+        }
+
+        // ===== VIDEOS panel =====
+        let videosSessionId = null;
+        let videosTimer = null;
+        setupUploadArea('Videos', /\.mp4$/i);
+
+        document.getElementById('uploadFormVideos').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('videoFileVideos').files[0];
+            const prompt = document.getElementById('editPrompt').value;
+            if (!file || !prompt) {
+                alert('Selecione um vídeo e descreva como quer editar');
+                return;
+            }
+
+            document.getElementById('submitBtnVideos').disabled = true;
+            document.getElementById('statusAreaVideos').innerHTML = `
+                <div class="status-processing">
+                    <div class="text-center">
+                        <div class="spinner-border text-warning mb-3"></div>
+                        <h5>🧠 Classificando sua intenção...</h5>
+                        <p class="mb-0">A IA está lendo seu prompt</p>
+                    </div>
+                </div>`;
+
+            const formData = new FormData();
+            formData.append('video', file);
+            formData.append('prompt', prompt);
+
             try {
-                const response = await fetch(`/clips/${currentSessionId}`);
-                const result = await response.json();
+                const resp = await fetch('/videos/upload', { method: 'POST', body: formData });
+                const result = await resp.json();
+                if (!resp.ok) throw new Error(result.error || 'Erro no upload');
 
-                if (response.ok && result.clips.length > 0) {
-                    resultsSection.style.display = 'block';
-                    clipsContainer.innerHTML = '';
+                videosSessionId = result.session_id;
+                document.getElementById('statusAreaVideos').innerHTML = `
+                    <div class="status-processing">
+                        <div class="text-center">
+                            <div class="spinner-border text-info mb-3"></div>
+                            <h5 id="videosStatusText">🎬 Transcrevendo e analisando...</h5>
+                            <p class="mb-0">Isso pode levar de 2 a 6 minutos</p>
+                        </div>
+                    </div>`;
+                pollVideosStatus();
+            } catch (err) {
+                document.getElementById('statusAreaVideos').innerHTML = `
+                    <div class="alert alert-danger"><h5>❌ Erro: ${err.message}</h5></div>`;
+                document.getElementById('submitBtnVideos').disabled = false;
+            }
+        });
 
-                    result.clips.forEach((clip, index) => {
-                        const clipCard = document.createElement('div');
-                        clipCard.className = 'card video-card';
-                        clipCard.innerHTML = `
-                            <video controls preload="metadata">
-                                <source src="${clip.url}" type="video/mp4">
-                                Seu navegador não suporta vídeos.
-                            </video>
-                            <div class="card-body">
-                                <h5 class="card-title">🎬 Momento ${index + 1}</h5>
-                                <p class="card-text">
-                                    <strong>Tamanho:</strong> ${clip.size_mb} MB<br>
-                                    <a href="${clip.url}" download class="btn btn-sm btn-primary">⬇️ Download</a>
-                                </p>
-                            </div>
-                        `;
-                        clipsContainer.appendChild(clipCard);
-                    });
-                } else {
-                    resultsSection.innerHTML = '<p class="text-center text-muted">Nenhum momento encontrado.</p>';
+        async function pollVideosStatus() {
+            if (!videosSessionId) return;
+            try {
+                const resp = await fetch(`/videos/status/${videosSessionId}`);
+                const result = await resp.json();
+
+                const statusText = document.getElementById('videosStatusText');
+                if (statusText) {
+                    if (result.status === 'processing') {
+                        statusText.textContent = '⏳ Ainda processando...';
+                    } else if (result.status === 'completed') {
+                        statusText.textContent = '✅ Concluído!';
+                    } else if (result.status === 'failed') {
+                        statusText.textContent = '❌ Falhou';
+                    }
                 }
-            } catch (error) {
-                console.error('Error loading clips:', error);
+
+                if (result.status === 'completed') {
+                    document.getElementById('statusAreaVideos').innerHTML = `
+                        <div class="status-completed">
+                            <h5>✅ Vídeo editado com sucesso!</h5>
+                        </div>`;
+                    await loadVideoResult();
+                } else if (result.status === 'failed') {
+                    document.getElementById('statusAreaVideos').innerHTML = `
+                        <div class="status-failed">
+                            <h5>❌ Falha no processamento</h5>
+                            <p class="mb-0"><strong>Erro:</strong> ${result.error || 'desconhecido'}</p>
+                        </div>`;
+                    document.getElementById('submitBtnVideos').disabled = false;
+                } else {
+                    videosTimer = setTimeout(pollVideosStatus, 3000);
+                }
+            } catch (e) {
+                videosTimer = setTimeout(pollVideosStatus, 3000);
+            }
+        }
+
+        async function loadVideoResult() {
+            try {
+                const resp = await fetch(`/videos/result/${videosSessionId}`);
+                const result = await resp.json();
+                const container = document.getElementById('videoResultContainer');
+                document.getElementById('resultsSectionVideos').style.display = 'block';
+
+                if (!resp.ok) {
+                    container.innerHTML = `<div class="alert alert-warning">Não foi possível carregar o vídeo.</div>`;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="card video-card">
+                        <video controls preload="metadata">
+                            <source src="${result.url}" type="video/mp4">
+                        </video>
+                        <div class="card-body">
+                            <h5 class="card-title">🎞️ ${result.filename}</h5>
+                            <p class="card-text"><strong>Tamanho:</strong> ${result.size_mb} MB</p>
+                            <a href="${result.url}" download class="btn btn-primary">⬇️ Download</a>
+                        </div>
+                    </div>`;
+                document.getElementById('submitBtnVideos').disabled = false;
+            } catch (e) {
+                console.error('Erro ao carregar resultado:', e);
             }
         }
     </script>
