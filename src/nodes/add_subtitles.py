@@ -41,18 +41,75 @@ def escape_text_for_ffmpeg(text: str) -> str:
     """
     Escape text for FFmpeg drawtext filter.
     Special characters need to be escaped: ':', '\', '=', "'", '%'
+    IMPORTANT: Does NOT escape backslashes that are part of \\n (line breaks)
     """
-    # Replace backslashes first
+    # First, preserve line breaks by temporarily replacing them
+    text = text.replace('\\n', '___LINE_BREAK___')
+
+    # Now escape special characters
     text = text.replace('\\', '\\\\')
-    # Replace colons
     text = text.replace(':', '\\:')
-    # Replace equals signs
     text = text.replace('=', '\\=')
-    # Replace quotes
     text = text.replace("'", "\\'")
-    # Replace percent signs
     text = text.replace('%', '\\%')
+
+    # Restore line breaks (now they're just \n, not \\n)
+    text = text.replace('___LINE_BREAK___', '\\n')
+
     return text
+
+
+def wrap_text_for_subtitle(text: str, max_chars_per_line: int = 40) -> str:
+    """
+    Wrap text into multiple lines for subtitle display.
+    Tries to break at word boundaries when possible.
+
+    Args:
+        text: Original text
+        max_chars_per_line: Maximum characters per line
+
+    Returns:
+        Text with \\n line breaks for FFmpeg
+    """
+    words = text.split()
+    if not words:
+        return text
+
+    lines = []
+    current_line = []
+    current_length = 0
+
+    for word in words:
+        word_length = len(word)
+
+        # If a single word is too long, break it
+        if word_length > max_chars_per_line:
+            if current_line:
+                lines.append(' '.join(current_line))
+                current_line = []
+                current_length = 0
+
+            # Break long word into chunks
+            for i in range(0, word_length, max_chars_per_line):
+                chunk = word[i:i + max_chars_per_line]
+                lines.append(chunk)
+            continue
+
+        # Check if adding this word exceeds the line limit
+        if current_line and current_length + word_length + 1 > max_chars_per_line:
+            lines.append(' '.join(current_line))
+            current_line = [word]
+            current_length = word_length
+        else:
+            current_line.append(word)
+            current_length += word_length + (1 if current_line else 0)
+
+    # Add the last line
+    if current_line:
+        lines.append(' '.join(current_line))
+
+    # Join lines with FFmpeg line break
+    return '\\n'.join(lines)
 
 
 def create_ffmpeg_drawtext_filter(
@@ -61,9 +118,9 @@ def create_ffmpeg_drawtext_filter(
     end_time: float,
     video_width: int,
     video_height: int,
-    fontsize: int = 24,
+    fontsize: int = 14,
     font_color: str = "white",
-    background_color: str = "black@0.5",
+    background_color: str = "black@0.7",
     position: str = "bottom"
 ) -> str:
     """
@@ -75,7 +132,7 @@ def create_ffmpeg_drawtext_filter(
         end_time: End time in seconds
         video_width: Video width
         video_height: Video height
-        fontsize: Font size in pixels (reduced to fit video)
+        fontsize: Font size in pixels (MUITO reduzido para caber)
         font_color: Text color
         background_color: Background color with opacity
         position: Position on screen
@@ -83,15 +140,18 @@ def create_ffmpeg_drawtext_filter(
     Returns:
         FFmpeg filter string
     """
-    # Clean up text and limit length
+    # Clean up text and limit total length
     text = ' '.join(text.strip().split())
 
     # Truncate very long text to avoid overflow
-    max_chars = 100
-    if len(text) > max_chars:
-        text = text[:max_chars-3] + "..."
+    max_total_chars = 120
+    if len(text) > max_total_chars:
+        text = text[:max_total_chars-3] + "..."
 
-    escaped_text = escape_text_for_ffmpeg(text)
+    # Wrap text to fit within video width (linhas MUITO mais curtas)
+    wrapped_text = wrap_text_for_subtitle(text, max_chars_per_line=30)
+
+    escaped_text = escape_text_for_ffmpeg(wrapped_text)
 
     # Calculate position based on video size
     if position == "top":
@@ -101,17 +161,14 @@ def create_ffmpeg_drawtext_filter(
     else:  # bottom (default)
         y = f"{int(video_height * 0.85)}"
 
-    # Calculate max line width (80% of video width)
-    max_line_width = int(video_width * 0.8)
-
-    # Build the drawtext filter with line wrapping
+    # Build the drawtext filter with explicit text sizing
     filter_str = (
         f"drawtext=text='{escaped_text}':"
         f"fontsize={fontsize}:"
         f"fontcolor={font_color}:"
         f"box=1:boxcolor={background_color}:"
-        f"boxborderw=3:"
-        f"line_spacing=2:"
+        f"boxborderw=2:"
+        f"line_spacing=1:"
         f"x=(w-text_w)/2:"
         f"y={y}:"
         f"enable='between(t,{start_time},{end_time})'"
@@ -220,9 +277,9 @@ def add_subtitles_to_clip(
                     end_time=segment["end"],
                     video_width=video_width,
                     video_height=video_height,
-                    fontsize=24,  # Reduced from 48 to fit better
+                    fontsize=14,  # MUITO reduzido (era 24, depois 18)
                     font_color="white",
-                    background_color="black@0.5",
+                    background_color="black@0.7",  # Mais escuro para contraste
                     position="bottom"
                 )
                 filter_complex.append(filter_str)

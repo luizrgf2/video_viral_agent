@@ -349,12 +349,14 @@ brew install ffmpeg
 
 ### Formato das Legendas
 
-- **Cor**: Texto branco sobre fundo preto (50% transparência)
-- **Tamanho**: Fonte de 24px (ajustado para caber no vídeo)
+- **Cor**: Texto branco sobre fundo preto (70% transparência)
+- **Tamanho**: Fonte de 14px (MUITO pequena para caber bem)
 - **Posição**: Parte inferior da tela (centralizado)
+- **Quebra de linha**: Automática a cada ~30 caracteres
 - **Duração**: Sincronizada com cada segmento da transcrição
 - **Escapamento**: Caracteres especiais são escapados automaticamente
-- **Limite de texto**: Máximo 100 caracteres por legenda
+- **Limite de texto**: Máximo 120 caracteres (com quebra automática)
+- **Múltiplas linhas**: Suporta até 6+ linhas por legenda
 
 ### Saída
 
@@ -368,27 +370,37 @@ subtitled_clip_002_60-65.mp4   # Clip com legendas
 
 Você pode personalizar as legendas editando `src/nodes/add_subtitles.py`:
 ```python
-# Tamanho da fonte (padrão: 24px)
-fontsize=24  # Reduzido de 48 para caber melhor
+# Tamanho da fonte (padrão: 14px - MUITO pequeno)
+fontsize=14  # Reduzido drasticamente para caber bem
+
+# Caracteres por linha antes da quebra
+max_chars_per_line=30  # Linhas mais curtas (era 40)
+
+# Limite total de caracteres
+max_total_chars=120  # Trunca se for muito longo
 
 # Cor do texto
 font_color="white"
 
 # Cor do fundo (formato: "cor@opacidade")
-background_color="black@0.5"  # 50% de transparência
+background_color="black@0.7"  # 70% de transparência (mais escuro)
 
 # Posição ("top", "center", "bottom")
 position="bottom"
 
-# Largura da borda da caixa (reduzido de 5 para 3)
-boxborderw=3
+# Largura da borda da caixa
+boxborderw=2  # Mais fina (era 3)
 
 # Espaçamento entre linhas
-line_spacing=2
-
-# Limite de caracteres por legenda
-max_chars=100
+line_spacing=1  # Mais justo (era 2)
 ```
+
+**Funcionalidades automáticas:**
+- ✅ **Quebra de linha inteligente**: Divide texto a cada ~30 caracteres
+- ✅ **Preserva palavras**: Tenta não cortar palavras no meio
+- ✅ **Fonte MUITO pequena**: 14px para garantir que sempre caiba
+- ✅ **Múltiplas linhas**: Suporta 4+ linhas por legenda automaticamente
+- ✅ **Escapamento inteligente**: Preserva `\n` para quebras de linha
 
 ### Exemplo Visual
 
