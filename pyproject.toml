@@ -35,5 +35,5 @@ build-backend = "hatchling.build"
 packages = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "src/__tests__"]
+testpaths = ["tests", "src/__tests__", "src/clips/__tests__", "src/videos/__tests__"]
 pythonpath = ["."]

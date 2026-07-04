@@ -18,6 +18,7 @@ load_dotenv()
 # Import video processing modules
 from src.clips.application.workflow import run_workflow
 from src.clips.domain.state import ClipExtractionState, AnalysisStatus
+from src.videos.api.routes import videos_bp
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
@@ -25,9 +26,13 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['OUTPUT_FOLDER'] = 'output_clips'
 app.config['ALLOWED_EXTENSIONS'] = {'mp4', 'mov', 'avi', 'mkv'}
 
+# Register the videos editing blueprint under /videos
+app.register_blueprint(videos_bp, url_prefix="/videos")
+
 # Create necessary directories
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
+os.makedirs('output_videos', exist_ok=True)
 
 
 def allowed_file(filename):
