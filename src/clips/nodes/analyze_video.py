@@ -2,8 +2,8 @@ import base64
 import logging
 import os
 from pathlib import Path
-from src.state import VideoAnalysisState, AnalysisStatus
-from src.agents import vlmModel, VIDEO_ANALYSIS_SYSTEM_PROMPT
+from src.clips.domain.state import ClipExtractionState, AnalysisStatus
+from src.shared.llm.agents import vlmModel, VIDEO_ANALYSIS_SYSTEM_PROMPT
 from langchain_core.messages import HumanMessage
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 NODE_ID = "analyze_video"
 
 
-async def analyze_video_node(state: VideoAnalysisState) -> dict:
+async def analyze_video_node(state: ClipExtractionState) -> dict:
     logger.info(f"[{NODE_ID}] Starting video analysis", extra={"videoPath": state.videoPath})
 
     try:

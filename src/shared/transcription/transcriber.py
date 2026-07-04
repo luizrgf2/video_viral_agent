@@ -2,14 +2,13 @@ import logging
 import os
 import tempfile
 from pathlib import Path
-from src.state import VideoAnalysisState, AnalysisStatus
 from faster_whisper import WhisperModel
 from groq import Groq
 from moviepy import VideoFileClip
 
 logger = logging.getLogger(__name__)
 
-NODE_ID = "transcribe_audio"
+NODE_ID = "transcriber"
 
 
 def get_transcription_mode() -> str:
@@ -308,44 +307,29 @@ async def transcribe_with_groq(video_path: Path) -> dict:
             cleanup_temp_audio(Path(optimized_audio))
 
 
-async def transcribe_audio_node(state: VideoAnalysisState) -> dict:
-    """Main transcription node that routes to appropriate service based on configuration."""
-    try:
-        video_path = Path(state.videoPath)
+async def transcribe(video_path: Path) -> dict:
+    """Transcribe a video file. Returns dict with keys:
+    - transcription: str
+    - transcriptionSegments: List[{start, end, text}]
+    - mode: "local" | "groq"
+    - duration: float
+    - language: str (local mode only)
+    - model: str (groq mode only)
 
-        if not video_path.exists():
-            logger.error(f"[{NODE_ID}] Video file not found", extra={"videoPath": state.videoPath})
-            return {
-                "error": f"Video file not found: {state.videoPath}",
-                "status": AnalysisStatus.FAILED
-            }
+    Raises RuntimeError on missing file or transcription errors.
+    """
+    if not video_path.exists():
+        raise RuntimeError(f"Video file not found: {video_path}")
 
-        file_size = video_path.stat().st_size
-        logger.info(f"[{NODE_ID}] Starting audio transcription", extra={
-            "videoPath": state.videoPath,
-            "size_mb": file_size / (1024 * 1024)
-        })
+    file_size = video_path.stat().st_size
+    logger.info(f"[{NODE_ID}] Starting transcription", extra={
+        "videoPath": str(video_path),
+        "size_mb": file_size / (1024 * 1024),
+    })
 
-        # Get transcription mode from environment
-        mode = get_transcription_mode()
-        logger.info(f"[{NODE_ID}] Transcription mode: {mode}", extra={"mode": mode})
+    mode = get_transcription_mode()
+    logger.info(f"[{NODE_ID}] Transcription mode: {mode}", extra={"mode": mode})
 
-        # Route to appropriate transcription service
-        if mode == "groq":
-            result = await transcribe_with_groq(video_path)
-        else:  # Default to local
-            result = await transcribe_with_faster_whisper(video_path)
-
-        # Return success with transcription data
-        return {
-            **result,
-            "status": AnalysisStatus.IDENTIFYING_MOMENTS
-        }
-
-    except Exception as e:
-        error_message = str(e)
-        logger.error(f"[{NODE_ID}] Transcription failed", extra={"error": error_message})
-        return {
-            "error": f"Transcription failed: {error_message}",
-            "status": AnalysisStatus.FAILED
-        }
+    if mode == "groq":
+        return await transcribe_with_groq(video_path)
+    return await transcribe_with_faster_whisper(video_path)

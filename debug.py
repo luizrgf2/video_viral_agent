@@ -5,8 +5,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from dotenv import load_dotenv
-from src.state import VideoAnalysisState, AnalysisStatus
-from src.workflow import run_workflow
+from src.clips.domain.state import ClipExtractionState, AnalysisStatus
+from src.clips.application.workflow import run_workflow
 import logging
 
 logging.basicConfig(
@@ -22,7 +22,7 @@ async def debug_main():
 
     load_dotenv()
 
-    initial_state = VideoAnalysisState(
+    initial_state = ClipExtractionState(
         videoPath=video_path,
         analysis=analysis,
         status=AnalysisStatus.PENDING

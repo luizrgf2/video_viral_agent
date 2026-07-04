@@ -1,9 +1,9 @@
 import logging
 import os
 from pathlib import Path
-from src.state import VideoAnalysisState, AnalysisStatus
+from src.clips.domain.state import ClipExtractionState, AnalysisStatus
 from moviepy import VideoFileClip
-from src.utils.waveform_analyzer import (
+from src.shared.audio.waveform import (
     analyze_video_for_natural_cuts,
     parse_timestamp_to_seconds,
     format_timestamp
@@ -18,7 +18,7 @@ NODE_ID = "edit_video"
 parse_timestamp = parse_timestamp_to_seconds
 
 
-async def edit_video_node(state: VideoAnalysisState) -> dict:
+async def edit_video_node(state: ClipExtractionState) -> dict:
     logger.info(f"[{NODE_ID}] Starting video editing with waveform analysis", extra={"videoPath": state.videoPath})
 
     try:

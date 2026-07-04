@@ -1,6 +1,6 @@
 import logging
-from src.state import VideoAnalysisState, ClipInfo, AnalysisStatus
-from src.agents import llmModel, MOMENTS_IDENTIFICATION_SYSTEM_PROMPT
+from src.clips.domain.state import ClipExtractionState, ClipInfo, AnalysisStatus
+from src.shared.llm.agents import llmModel
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ def expand_clip_with_context(clip_start: str, clip_end: str, transcription_segme
         return clip_start, clip_end
 
 
-async def identify_moments_node(state: VideoAnalysisState) -> dict:
+async def identify_moments_node(state: ClipExtractionState) -> dict:
     logger.info(f"[{NODE_ID}] Starting moment identification")
 
     try:

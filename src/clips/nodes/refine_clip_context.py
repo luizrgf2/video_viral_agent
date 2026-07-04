@@ -1,6 +1,6 @@
 import logging
-from src.state import VideoAnalysisState, ClipInfo, AnalysisStatus
-from src.agents import llmModel
+from src.clips.domain.state import ClipExtractionState, ClipInfo, AnalysisStatus
+from src.shared.llm.agents import llmModel
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ def find_surrounding_segments(
     return {"before": before_segments, "after": after_segments}
 
 
-async def refine_clip_context_node(state: VideoAnalysisState) -> dict:
+async def refine_clip_context_node(state: ClipExtractionState) -> dict:
     logger.info(f"[{NODE_ID}] Starting clip context refinement")
 
     try:

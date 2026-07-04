@@ -6,8 +6,8 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from src.state import VideoAnalysisState, AnalysisStatus
-from src.workflow import run_workflow
+from src.clips.domain.state import ClipExtractionState, AnalysisStatus
+from src.clips.application.workflow import run_workflow
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,7 +21,7 @@ def setup_logging():
     logging.getLogger().setLevel(getattr(logging, log_level))
 
 
-def print_results(state: VideoAnalysisState):
+def print_results(state: ClipExtractionState):
     if state.status == AnalysisStatus.COMPLETED and state.clips:
         print(f"\n✅ Found {len(state.clips)} viral moments:\n")
 
@@ -76,7 +76,7 @@ async def main():
 
     setup_logging()
 
-    initial_state = VideoAnalysisState(
+    initial_state = ClipExtractionState(
         videoPath=str(video_path),
         analysis=args.analysis,
         status=AnalysisStatus.PENDING

@@ -16,8 +16,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import video processing modules
-from src.workflow import run_workflow
-from src.state import VideoAnalysisState, AnalysisStatus
+from src.clips.application.workflow import run_workflow
+from src.clips.domain.state import ClipExtractionState, AnalysisStatus
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
@@ -79,7 +79,7 @@ def upload_video():
             asyncio.set_event_loop(loop)
 
             try:
-                initial_state = VideoAnalysisState(
+                initial_state = ClipExtractionState(
                     videoPath=filepath,
                     analysis=[analysis_criteria],
                     status=AnalysisStatus.PENDING
