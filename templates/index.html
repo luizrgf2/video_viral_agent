@@ -438,7 +438,26 @@
         // ===== VIDEOS panel =====
         let videosSessionId = null;
         let videosTimer = null;
+        let videosLastPollAt = 0;
         setupUploadArea('Videos', /\.mp4$/i);
+
+        // Resume polling if page was reloaded mid-processing
+        (function resumeVideosSession() {
+            const saved = localStorage.getItem('videosSessionId');
+            if (!saved) return;
+            const statusArea = document.getElementById('statusAreaVideos');
+            if (!statusArea) return;
+            statusArea.innerHTML = `
+                <div class="status-processing">
+                    <div class="text-center">
+                        <div class="spinner-border text-info mb-3"></div>
+                        <h5 id="videosStatusText">🔄 Retomando sessão...</h5>
+                        <p class="mb-0" id="videosLastCheck">Verificando status</p>
+                    </div>
+                </div>`;
+            videosSessionId = saved;
+            pollVideosStatus();
+        })();
 
         document.getElementById('uploadFormVideos').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -469,14 +488,16 @@
                 if (!resp.ok) throw new Error(result.error || 'Erro no upload');
 
                 videosSessionId = result.session_id;
+                localStorage.setItem('videosSessionId', videosSessionId);
                 document.getElementById('statusAreaVideos').innerHTML = `
                     <div class="status-processing">
                         <div class="text-center">
                             <div class="spinner-border text-info mb-3"></div>
                             <h5 id="videosStatusText">🎬 Transcrevendo e analisando...</h5>
-                            <p class="mb-0">Isso pode levar de 2 a 6 minutos</p>
+                            <p class="mb-0" id="videosLastCheck">Isso pode levar de 2 a 6 minutos</p>
                         </div>
                     </div>`;
+                videosLastPollAt = Date.now();
                 pollVideosStatus();
             } catch (err) {
                 document.getElementById('statusAreaVideos').innerHTML = `
@@ -487,19 +508,32 @@
 
         async function pollVideosStatus() {
             if (!videosSessionId) return;
+
+            const cacheBust = `?_=${Date.now()}`;
             try {
-                const resp = await fetch(`/videos/status/${videosSessionId}`);
+                const resp = await fetch(`/videos/status/${videosSessionId}${cacheBust}`, {
+                    cache: 'no-store',
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
                 const result = await resp.json();
+                videosLastPollAt = Date.now();
+
+                console.log('[videos poll]', result);
 
                 const statusText = document.getElementById('videosStatusText');
+                const lastCheck = document.getElementById('videosLastCheck');
+
                 if (statusText) {
-                    if (result.status === 'processing') {
+                    if (result.status === 'processing' || result.status === 'pending') {
                         statusText.textContent = '⏳ Ainda processando...';
                     } else if (result.status === 'completed') {
                         statusText.textContent = '✅ Concluído!';
                     } else if (result.status === 'failed') {
                         statusText.textContent = '❌ Falhou';
                     }
+                }
+                if (lastCheck) {
+                    lastCheck.textContent = `Última verificação: ${new Date().toLocaleTimeString('pt-BR')}`;
                 }
 
                 if (result.status === 'completed') {
@@ -508,36 +542,49 @@
                             <h5>✅ Vídeo editado com sucesso!</h5>
                         </div>`;
                     await loadVideoResult();
-                } else if (result.status === 'failed') {
+                    return;
+                }
+                if (result.status === 'failed') {
                     document.getElementById('statusAreaVideos').innerHTML = `
                         <div class="status-failed">
                             <h5>❌ Falha no processamento</h5>
                             <p class="mb-0"><strong>Erro:</strong> ${result.error || 'desconhecido'}</p>
                         </div>`;
                     document.getElementById('submitBtnVideos').disabled = false;
-                } else {
-                    videosTimer = setTimeout(pollVideosStatus, 3000);
+                    localStorage.removeItem('videosSessionId');
+                    return;
                 }
-            } catch (e) {
+
                 videosTimer = setTimeout(pollVideosStatus, 3000);
+            } catch (e) {
+                console.warn('[videos poll] error, will retry', e);
+                const lastCheck = document.getElementById('videosLastCheck');
+                if (lastCheck) lastCheck.textContent = `Erro de rede, tentando novamente...`;
+                videosTimer = setTimeout(pollVideosStatus, 5000);
             }
         }
 
         async function loadVideoResult() {
             try {
-                const resp = await fetch(`/videos/result/${videosSessionId}`);
+                const cacheBust = `?_=${Date.now()}`;
+                const resp = await fetch(`/videos/result/${videosSessionId}${cacheBust}`, {
+                    cache: 'no-store'
+                });
                 const result = await resp.json();
                 const container = document.getElementById('videoResultContainer');
                 document.getElementById('resultsSectionVideos').style.display = 'block';
 
                 if (!resp.ok) {
-                    container.innerHTML = `<div class="alert alert-warning">Não foi possível carregar o vídeo.</div>`;
+                    container.innerHTML = `<div class="alert alert-warning">
+                        Não foi possível carregar o vídeo (${result.error || resp.status}).
+                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="loadVideoResult()">Tentar novamente</button>
+                    </div>`;
                     return;
                 }
 
                 container.innerHTML = `
                     <div class="card video-card">
-                        <video controls preload="metadata">
+                        <video controls preload="metadata" style="max-height: 500px;">
                             <source src="${result.url}" type="video/mp4">
                         </video>
                         <div class="card-body">
@@ -547,8 +594,20 @@
                         </div>
                     </div>`;
                 document.getElementById('submitBtnVideos').disabled = false;
+                localStorage.removeItem('videosSessionId');
+
+                // Auto-scroll to result
+                setTimeout(() => {
+                    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
             } catch (e) {
                 console.error('Erro ao carregar resultado:', e);
+                const container = document.getElementById('videoResultContainer');
+                if (container) {
+                    container.innerHTML = `<div class="alert alert-warning">
+                        Erro ao exibir o vídeo. Recarregue a página.
+                    </div>`;
+                }
             }
         }
     </script>
