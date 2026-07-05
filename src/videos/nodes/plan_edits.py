@@ -30,10 +30,14 @@ Return ONLY valid JSON with a "segments" array."""
 
 
 def build_prompt(state: VideoEditState) -> str:
-    parts = [f"# User editing directive\n{state.editPlan.editInstructions}\n"]
+    parts: list[str] = []
 
-    if state.editPlan.mode != "custom":
-        parts.append(f"\n# Detected preset mode\n{state.editPlan.mode}\n")
+    if state.editPlan and state.editPlan.editInstructions:
+        parts.append(f"# User editing directive\n{state.editPlan.editInstructions}\n")
+        if state.editPlan.mode and state.editPlan.mode != "custom":
+            parts.append(f"\n# Detected preset mode\n{state.editPlan.mode}\n")
+    else:
+        parts.append(f"# User editing directive\n{state.userPrompt}\n")
 
     if state.transcriptionSegments:
         parts.append("\n# Timestamped transcription\n")
@@ -68,6 +72,16 @@ async def plan_edits_node(state: VideoEditState) -> dict:
                 "error": "Cannot plan edits without transcription",
                 "status": EditStatus.FAILED,
             }
+
+        if state.editPlan is None:
+            logger.warning(f"[{NODE_ID}] editPlan is None, building default from userPrompt")
+            from src.videos.domain.state import EditPlan
+            state.editPlan = EditPlan(
+                needsVision=False,
+                mode="custom",
+                editInstructions=state.userPrompt,
+                reasoning="Fallback: editPlan was None at plan_edits",
+            )
 
         prompt = build_prompt(state)
         messages = [

@@ -1,0 +1,31 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "uv-sync",
+      "type": "shell",
+      "command": "uv sync",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "close": true
+      }
+    },
+    {
+      "label": "pytest",
+      "type": "shell",
+      "command": "uv run pytest -v",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "imports-check",
+      "type": "shell",
+      "command": "uv run python -c \"from src.clips.application.workflow import create_clip_workflow; from src.videos.application.workflow import create_edit_workflow; print('imports OK')\"",
+      "problemMatcher": []
+    }
+  ]
+}

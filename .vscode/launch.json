@@ -1,0 +1,48 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flask: uv run app.py",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app",
+      "justMyCode": true,
+      "env": {
+        "FLASK_ENV": "development",
+        "FLASK_DEBUG": "1"
+      },
+      "console": "integratedTerminal",
+      "preLaunchTask": "uv-sync"
+    },
+    {
+      "name": "Flask: uv run app.py (sem reload)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app",
+      "justMyCode": true,
+      "env": {
+        "FLASK_ENV": "development",
+        "FLASK_DEBUG": "0"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Pytest: todos",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["-v"],
+      "justMyCode": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Pytest: arquivo atual",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["-v", "${file}"],
+      "justMyCode": false,
+      "console": "integratedTerminal"
+    }
+  ]
+}
