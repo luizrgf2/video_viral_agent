@@ -4,6 +4,8 @@
 *.log
 uploads/
 output_clips/
+output_clips_subtitled/
+output_videos/
 *.mp4
 *.mov
 *.avi
@@ -20,3 +22,7 @@ htmlcov/
 .DS_Store
 *.pyc
 **/__pycache__/
+
+# Editor / agent local config
+.claude/settings.local.json
+.vscode/*.local.json
